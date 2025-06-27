@@ -30,40 +30,47 @@
                             class="px-4 py-2 text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             {{ __('Tambah Pengeluaran Baru') }}
                         </a>
-                        <!-- Form Filter (Opsional) -->
-                        <form method="GET" action="{{ route('expenses.index') }}" class="flex items-end space-x-2">
-                            <div>
-                                <x-input-label for="start_date" :value="__('Dari Tanggal')" />
-                                <x-text-input id="start_date" type="date" name="start_date" :value="request('start_date')"
-                                    class="block w-full" />
-                            </div>
-                            <div>
-                                <x-input-label for="end_date" :value="__('Sampai Tanggal')" />
-                                <x-text-input id="end_date" type="date" name="end_date" :value="request('end_date')"
-                                    class="block w-full" />
-                            </div>
-                            <div>
-                                <x-input-label for="category_filter" :value="__('Kategori')" />
-                                <select id="category_filter" name="category_id"
-                                    class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">{{ __('Semua Kategori') }}</option>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}"
-                                            {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <x-primary-button type="submit">
-                                {{ __('Filter') }}
-                            </x-primary-button>
-                            <a href="{{ route('expenses.index') }}"
-                                class="px-4 py-2 ml-2 text-gray-700 bg-gray-200 rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                                {{ __('Reset') }}
-                            </a>
-                        </form>
+                        <!-- Export Button -->
+                        <a href="{{ route('expenses.export', request()->query()) }}"
+                            class="px-4 py-2 ml-4 text-white bg-green-500 rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400">
+                            {{ __('Export ke Excel') }}
+                        </a>
                     </div>
+
+                    <!-- Form Filter -->
+                    <form method="GET" action="{{ route('expenses.index') }}"
+                        class="flex items-end p-4 mb-4 space-x-2 rounded-lg shadow-inner bg-gray-50">
+                        <div>
+                            <x-input-label for="start_date" :value="__('Dari Tanggal')" />
+                            <x-text-input id="start_date" type="date" name="start_date" :value="request('start_date')"
+                                class="block w-full" />
+                        </div>
+                        <div>
+                            <x-input-label for="end_date" :value="__('Sampai Tanggal')" />
+                            <x-text-input id="end_date" type="date" name="end_date" :value="request('end_date')"
+                                class="block w-full" />
+                        </div>
+                        <div>
+                            <x-input-label for="category_filter" :value="__('Kategori')" />
+                            <select id="category_filter" name="category_id"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">{{ __('Semua Kategori') }}</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <x-primary-button type="submit">
+                            {{ __('Filter') }}
+                        </x-primary-button>
+                        <a href="{{ route('expenses.index') }}"
+                            class="px-4 py-2 ml-2 text-gray-700 bg-gray-200 rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                            {{ __('Reset') }}
+                        </a>
+                    </form>
 
                     @if ($expenses->isEmpty())
                         <p class="py-4 text-center text-gray-600">Belum ada pengeluaran yang dicatat.</p>

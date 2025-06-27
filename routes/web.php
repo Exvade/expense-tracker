@@ -4,10 +4,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // Import Auth facade
-use App\Models\Category; // Import Category model
-use App\Models\Expense; // Import Expense model
-use Carbon\Carbon; // Import Carbon for date manipulation
+use Illuminate\Support\Facades\Auth;
+use App\Models\Category;
+use App\Models\Expense;
+use Carbon\Carbon;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,38 +17,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
 
-        // Ambil saldo awal dari database
-        $initialBalance = $user->initial_balance; // <--- UBAH DI SINI
+        $initialBalance = $user->initial_balance;
 
-        // Total expenses for the current month
         $totalExpensesThisMonth = $user->expenses()
                                         ->whereMonth('expense_date', now()->month)
                                         ->whereYear('expense_date', now()->year)
                                         ->sum('amount');
 
-        // Total expenses for the current year
         $totalExpensesThisYear = $user->expenses()
                                        ->whereYear('expense_date', now()->year)
                                        ->sum('amount');
 
-        // Remaining balance
         $remainingBalance = $initialBalance - $totalExpensesThisMonth;
 
-        // Expenses breakdown by category for the current month
         $expensesByCategory = $user->expenses()
                                    ->whereMonth('expense_date', now()->month)
                                    ->whereYear('expense_date', now()->year)
-                                   ->with('category') // Eager load category to get names
+                                   ->with('category')
                                    ->get()
                                    ->groupBy(function($expense) {
-                                       return $expense->category->name ?? 'Tanpa Kategori'; // Group by category name
+                                       return $expense->category->name ?? 'Tidak Ada Kategori';
                                    })
                                    ->map(function($items) {
-                                       return $items->sum('amount'); // Sum amount for each group
+                                       return $items->sum('amount');
                                    })
-                                   ->sortDesc(); // Sort by highest expense first
+                                   ->sortDesc();
 
-        // Calculate percentages for chart (optional, but good for visualization)
         $categoryPercentages = [];
         if ($totalExpensesThisMonth > 0) {
             foreach ($expensesByCategory as $categoryName => $amount) {
@@ -56,7 +50,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 $categoryPercentages[$categoryName] = round($percentage, 2);
             }
         }
-
 
         return view('dashboard', compact(
             'initialBalance',
@@ -70,14 +63,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    // Tambahkan route baru ini:
     Route::patch('/profile/initial-balance', [ProfileController::class, 'updateInitialBalance'])->name('profile.update-initial-balance');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Route untuk Kategori
     Route::resource('categories', CategoryController::class);
 
-    // Route untuk Pengeluaran
+    // PENTING: Pindahkan route spesifik ini ke ATAS route resource 'expenses'
+    Route::get('expenses/export', [ExpenseController::class, 'export'])->name('expenses.export');
+
+    // Route untuk Pengeluaran (resource)
     Route::resource('expenses', ExpenseController::class);
 });
 

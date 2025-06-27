@@ -7,6 +7,8 @@ use App\Models\Category; // Import Category model to get categories for dropdown
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth; // Import Auth facade
 use Carbon\Carbon; // Import Carbon for date manipulation
+use Maatwebsite\Excel\Facades\Excel; // Import Excel Facade
+use App\Exports\ExpensesExport;      // Import ExpensesExport class
 
 class ExpenseController extends Controller
 {
@@ -192,5 +194,21 @@ class ExpenseController extends Controller
             // If an error occurs, redirect back with an error message.
             return redirect()->back()->with('error', 'Gagal menghapus pengeluaran: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export expenses to Excel/CSV.
+     */
+    public function export(Request $request)
+    {
+        // Ambil parameter filter dari request
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $categoryId = $request->input('category_id');
+
+        // Buat instance dari ExpensesExport class dengan filter yang diberikan
+        return Excel::download(new ExpensesExport($startDate, $endDate, $categoryId), 'pengeluaran_' . Carbon::now()->format('Ymd_His') . '.xlsx');
+        // Anda juga bisa mengekspor ke CSV dengan mengubah ekstensi: '.csv'
+        // return Excel::download(new ExpensesExport($startDate, $endDate, $categoryId), 'pengeluaran_' . Carbon::now()->format('Ymd_His') . '.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 }
