@@ -4,19 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // Import Auth facade
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon; // Import Carbon for date functions
 
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the categories.
+     * Display a listing of the categories with current month's spending.
      */
     public function index()
     {
-        // Get all categories belonging to the currently authenticated user, ordered by creation date (latest first).
+        // Get all categories belonging to the currently authenticated user.
         $categories = Auth::user()->categories()->latest()->get();
 
-        // Return the view with the categories data.
+        // Calculate current month's spending for each category
+        $categories->each(function ($category) {
+            $currentMonthSpend = $category->expenses()
+                                         ->whereMonth('expense_date', now()->month)
+                                         ->whereYear('expense_date', now()->year)
+                                         ->sum('amount');
+            $category->current_month_spend = $currentMonthSpend;
+            $category->remaining_budget = $category->max_budget - $currentMonthSpend;
+            $category->percentage_used = ($category->max_budget > 0) ? round(($currentMonthSpend / $category->max_budget) * 100, 2) : 0;
+        });
+
+        // Return the view with the enriched categories data.
         return view('categories.index', compact('categories'));
     }
 
@@ -25,7 +37,6 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        // Return the view for creating a new category.
         return view('categories.create');
     }
 
@@ -34,37 +45,33 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request data.
         $request->validate([
-            'name' => 'required|string|max:255', // Category name is required, must be a string, max 255 characters.
+            'name' => 'required|string|max:255',
+            'max_budget' => 'required|numeric|min:0',
         ]);
 
         try {
-            // Create a new category associated with the authenticated user.
             Auth::user()->categories()->create([
                 'name' => $request->name,
+                'max_budget' => $request->max_budget,
             ]);
 
-            // Redirect to the categories index page with a success message.
             return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan!');
         } catch (\Exception $e) {
-            // If an error occurs, redirect back with an error message.
             return redirect()->back()->with('error', 'Gagal menambahkan kategori: ' . $e->getMessage());
         }
     }
 
     /**
      * Display the specified category.
-     * (Not directly used in current views but good for resource controllers)
      */
     public function show(Category $category)
     {
-        // Ensure the category belongs to the authenticated user.
         if ($category->user_id !== Auth::id()) {
             abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk melihat kategori ini.');
         }
 
-        return view('categories.show', compact('category')); // You might create a show.blade.php if needed.
+        return view('categories.show', compact('category'));
     }
 
     /**
@@ -72,12 +79,10 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        // Ensure the category belongs to the authenticated user before allowing edit.
         if ($category->user_id !== Auth::id()) {
             abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk mengedit kategori ini.');
         }
 
-        // Return the view for editing the category with the category data.
         return view('categories.edit', compact('category'));
     }
 
@@ -86,26 +91,23 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        // Ensure the category belongs to the authenticated user before allowing update.
         if ($category->user_id !== Auth::id()) {
             abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk memperbarui kategori ini.');
         }
 
-        // Validate the incoming request data.
         $request->validate([
-            'name' => 'required|string|max:255', // Category name is required, must be a string, max 255 characters.
+            'name' => 'required|string|max:255',
+            'max_budget' => 'required|numeric|min:0',
         ]);
 
         try {
-            // Update the category's name.
             $category->update([
                 'name' => $request->name,
+                'max_budget' => $request->max_budget,
             ]);
 
-            // Redirect to the categories index page with a success message.
             return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui!');
         } catch (\Exception $e) {
-            // If an error occurs, redirect back with an error message.
             return redirect()->back()->with('error', 'Gagal memperbarui kategori: ' . $e->getMessage());
         }
     }
@@ -115,19 +117,15 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        // Ensure the category belongs to the authenticated user before allowing deletion.
         if ($category->user_id !== Auth::id()) {
             abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk menghapus kategori ini.');
         }
 
         try {
-            // Delete the category. Due to `onDelete('cascade')` in migration, related expenses will also be deleted.
             $category->delete();
 
-            // Redirect to the categories index page with a success message.
             return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus!');
         } catch (\Exception $e) {
-            // If an error occurs, redirect back with an error message.
             return redirect()->back()->with('error', 'Gagal menghapus kategori: ' . $e->getMessage());
         }
     }

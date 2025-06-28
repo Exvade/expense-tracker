@@ -9,7 +9,7 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'name'];
+    protected $fillable = ['user_id', 'name', 'max_budget']; // <--- TAMBAHKAN 'max_budget' DI SINI
 
     public function user()
     {

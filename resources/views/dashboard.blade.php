@@ -160,7 +160,7 @@
                         </div>
 
                         <div class="p-6">
-                            @if ($expensesByCategory->isEmpty())
+                            @if ($categoriesWithBudgets->isEmpty())
                                 <div class="py-8 text-center">
                                     <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -168,37 +168,72 @@
                                             d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
                                         </path>
                                     </svg>
-                                    <p class="font-medium text-gray-600">Belum ada pengeluaran dicatat bulan ini.</p>
-                                    <p class="mt-1 text-sm text-gray-500">Mulai tambahkan pengeluaran untuk melihat
+                                    <p class="font-medium text-gray-600">Belum ada kategori atau pengeluaran dicatat
+                                        bulan ini.</p>
+                                    <p class="mt-1 text-sm text-gray-500">Mulai tambahkan kategori dan pengeluaran
+                                        untuk melihat
                                         statistik.</p>
                                 </div>
                             @else
                                 <div class="space-y-6">
-                                    @foreach ($expensesByCategory as $categoryName => $amount)
+                                    @foreach ($categoriesWithBudgets as $category)
                                         <div
                                             class="p-4 transition-colors duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
-                                            <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center justify-between mb-2">
                                                 <div class="flex items-center">
                                                     <div class="w-3 h-3 mr-3 bg-blue-500 rounded-full"></div>
-                                                    <p class="font-medium text-gray-800">{{ $categoryName }}</p>
+                                                    <p class="font-medium text-gray-800">{{ $category->name }}</p>
                                                 </div>
                                                 <div class="text-right">
                                                     <p class="font-semibold text-gray-900">
-                                                        {{ 'Rp ' . number_format($amount, 2, ',', '.') }}
+                                                        {{ 'Rp ' . number_format($category->current_month_spend, 2, ',', '.') }}
                                                     </p>
                                                     <p class="text-sm text-gray-500">
-                                                        @if (isset($categoryPercentages[$categoryName]))
-                                                            ({{ $categoryPercentages[$categoryName] }}%)
-                                                        @endif
+                                                        Budget:
+                                                        {{ 'Rp ' . number_format($category->max_budget, 2, ',', '.') }}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div class="w-full h-3 overflow-hidden bg-gray-200 rounded-full">
-                                                @if ($totalExpensesThisMonth > 0)
-                                                    <div class="h-3 transition-all duration-500 ease-out rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
-                                                        style="width: {{ $categoryPercentages[$categoryName] ?? 0 }}%">
-                                                    </div>
+                                            @php
+                                                $percentage = $category->percentage_used;
+                                                $statusClass = 'text-green-600';
+                                                $statusBarClass = 'bg-green-500';
+                                                if ($percentage >= 100) {
+                                                    $statusClass = 'text-red-600 font-bold';
+                                                    $statusBarClass = 'bg-red-500';
+                                                } elseif ($percentage >= 75) {
+                                                    $statusClass = 'text-orange-600 font-bold';
+                                                    $statusBarClass = 'bg-orange-500';
+                                                }
+                                            @endphp
+                                            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                                <div class="{{ $statusBarClass }} h-2.5 rounded-full"
+                                                    style="width: {{ min(100, $percentage) }}%"></div>
+                                            </div>
+                                            <p class="text-xs {{ $statusClass }} mt-1">
+                                                {{ $percentage }}% digunakan
+                                                @if ($percentage >= 100)
+                                                    (Melebihi budget!)
+                                                @elseif ($percentage >= 75)
+                                                    (Mendekati batas budget!)
                                                 @endif
+                                            </p>
+                                            <div class="mt-2 text-sm">
+                                                @php
+                                                    $remainingBudgetClass = 'text-gray-700';
+                                                    if ($category->remaining_budget < 0) {
+                                                        $remainingBudgetClass = 'text-red-600 font-bold';
+                                                    } elseif (
+                                                        $category->remaining_budget < $category->max_budget * 0.25 &&
+                                                        $category->max_budget > 0
+                                                    ) {
+                                                        $remainingBudgetClass = 'text-orange-600 font-bold';
+                                                    }
+                                                @endphp
+                                                <p class="{{ $remainingBudgetClass }}">
+                                                    Sisa Budget:
+                                                    {{ 'Rp ' . number_format($category->remaining_budget, 2, ',', '.') }}
+                                                </p>
                                             </div>
                                         </div>
                                     @endforeach

@@ -126,6 +126,42 @@
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
+                                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zM12 14c-1.657 0-3 .895-3 2v1h6v-1c0-1.105-1.343-2-3-2zM4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z">
+                                                        </path>
+                                                    </svg>
+                                                    {{ __('Budget Maksimal') }}
+                                                </div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-4 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                    {{ __('Pengeluaran Bulan Ini') }}
+                                                </div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-4 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M14 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {{ __('Sisa Budget') }}
+                                                </div>
+                                            </th>
+                                            <th scope="col"
+                                                class="px-6 py-4 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase">
+                                                <div class="flex items-center">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
                                                             d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
                                                         </path>
                                                     </svg>
@@ -155,6 +191,54 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                    {{ 'Rp ' . number_format($category->max_budget, 2, ',', '.') }}
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                    {{ 'Rp ' . number_format($category->current_month_spend, 2, ',', '.') }}
+                                                    @php
+                                                        $percentage = $category->percentage_used;
+                                                        $statusClass = 'text-green-600';
+                                                        $statusBarClass = 'bg-green-500';
+                                                        if ($percentage >= 100) {
+                                                            $statusClass = 'text-red-600 font-bold';
+                                                            $statusBarClass = 'bg-red-500';
+                                                        } elseif ($percentage >= 75) {
+                                                            $statusClass = 'text-orange-600 font-bold';
+                                                            $statusBarClass = 'bg-orange-500';
+                                                        }
+                                                    @endphp
+                                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                                                        <div class="{{ $statusBarClass }} h-2.5 rounded-full"
+                                                            style="width: {{ min(100, $percentage) }}%"></div>
+                                                    </div>
+                                                    <p class="text-xs {{ $statusClass }} mt-1">
+                                                        {{ $percentage }}% digunakan
+                                                        @if ($percentage >= 100)
+                                                            (Melebihi budget!)
+                                                        @elseif ($percentage >= 75)
+                                                            (Mendekati batas budget!)
+                                                        @endif
+                                                    </p>
+                                                </td>
+                                                <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                    @php
+                                                        $remainingClass = 'text-gray-900';
+                                                        if ($category->remaining_budget < 0) {
+                                                            $remainingClass = 'text-red-600 font-bold';
+                                                        } elseif (
+                                                            $category->remaining_budget <
+                                                                $category->max_budget * 0.25 &&
+                                                            $category->max_budget > 0
+                                                        ) {
+                                                            // Less than 25% remaining
+                                                            $remainingClass = 'text-orange-600 font-bold';
+                                                        }
+                                                    @endphp
+                                                    <span class="{{ $remainingClass }}">
+                                                        {{ 'Rp ' . number_format($category->remaining_budget, 2, ',', '.') }}
+                                                    </span>
                                                 </td>
                                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                                     <div class="flex items-center space-x-3">
@@ -196,7 +280,7 @@
                             </div>
                         </div>
 
-                        <!-- Stats Card -->
+                        <!-- Stats Card (already exists, no changes needed for this section but keeping it for context) -->
                         <div
                             class="p-4 mt-6 border border-purple-200 shadow-sm bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
                             <div class="flex items-center">

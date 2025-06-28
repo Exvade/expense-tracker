@@ -27,6 +27,22 @@
                 </div>
 
                 <div class="p-6 text-gray-900 sm:p-8">
+                    <!-- Success/Error Messages -->
+                    @if (session('success'))
+                        <div class="relative px-4 py-3 mb-6 text-green-700 bg-green-100 border border-green-400 rounded"
+                            role="alert">
+                            <strong class="font-bold">Sukses!</strong>
+                            <span class="block sm:inline">{{ session('success') }}</span>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="relative px-4 py-3 mb-6 text-red-700 bg-red-100 border border-red-400 rounded"
+                            role="alert">
+                            <strong class="font-bold">Error!</strong>
+                            <span class="block sm:inline">{{ session('error') }}</span>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('categories.store') }}" class="space-y-6">
                         @csrf
 
@@ -48,6 +64,21 @@
                             </div>
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
+
+                        <!-- Budget Maksimal -->
+                        <div class="space-y-2">
+                            <x-input-label for="max_budget" :value="__('Budget Maksimal (Rp)')"
+                                class="flex items-center text-sm font-medium text-gray-700" />
+                            <div class="relative">
+                                <x-text-input id="max_budget"
+                                    class="block w-full py-3 pl-3 pr-3 transition-colors duration-200 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                    type="number" name="max_budget" :value="old('max_budget', 0)" required step="0.01"
+                                    min="0" placeholder="Masukkan budget maksimal (contoh: 500000)" />
+                                <!-- No specific icon provided for budget, so using a standard text input field for now. -->
+                            </div>
+                            <x-input-error :messages="$errors->get('max_budget')" class="mt-2" />
+                        </div>
+
 
                         <!-- Action Buttons -->
                         <div

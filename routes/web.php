@@ -9,8 +9,9 @@ use App\Models\Category;
 use App\Models\Expense;
 use Carbon\Carbon;
 
+// Ubah route '/' untuk redirect ke halaman login
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -30,6 +31,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         $remainingBalance = $initialBalance - $totalExpensesThisMonth;
 
+        // Ambil semua kategori pengguna dan hitung pengeluaran bulan ini untuk setiap kategori
+        $categoriesWithBudgets = $user->categories()->get()->map(function ($category) {
+            $currentMonthSpend = $category->expenses()
+                                         ->whereMonth('expense_date', now()->month)
+                                         ->whereYear('expense_date', now()->year)
+                                         ->sum('amount');
+            $category->current_month_spend = $currentMonthSpend;
+            $category->remaining_budget = $category->max_budget - $currentMonthSpend;
+            $category->percentage_used = ($category->max_budget > 0) ? round(($currentMonthSpend / $category->max_budget) * 100, 2) : 0;
+            return $category;
+        });
+
+        // Tetap pertahankan perhitungan expensesByCategory dan categoryPercentages yang ada
+        // jika bagian lain dari dashboard masih menggunakannya, meskipun kita akan
+        // menggunakan categoriesWithBudgets untuk bagian "Pengeluaran Berdasarkan Kategori"
         $expensesByCategory = $user->expenses()
                                    ->whereMonth('expense_date', now()->month)
                                    ->whereYear('expense_date', now()->year)
@@ -56,8 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'totalExpensesThisMonth',
             'totalExpensesThisYear',
             'remainingBalance',
-            'expensesByCategory',
-            'categoryPercentages'
+            'expensesByCategory', // Tetap pertahankan jika ada komponen lain yang menggunakannya
+            'categoryPercentages', // Tetap pertahankan jika ada komponen lain yang menggunakannya
+            'categoriesWithBudgets' // VARIABEL BARU: Digunakan untuk bagian detail budget kategori
         ));
     })->name('dashboard');
 

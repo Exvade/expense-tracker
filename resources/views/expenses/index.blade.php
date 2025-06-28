@@ -53,15 +53,6 @@
                     <!-- Action Buttons -->
                     <div
                         class="flex flex-col items-start justify-between mb-6 space-y-3 sm:flex-row sm:items-center sm:space-y-0">
-                        <a href="{{ route('expenses.create') }}"
-                            class="inline-flex items-center px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-md bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            {{ __('Tambah Pengeluaran Baru') }}
-                        </a>
-
                         <a href="{{ route('expenses.export', request()->query()) }}"
                             class="inline-flex items-center px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-md bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,6 +62,16 @@
                             </svg>
                             {{ __('Export ke Excel') }}
                         </a>
+                        <a href="{{ route('expenses.create') }}"
+                            class="inline-flex items-center px-4 py-2 text-white transition-all duration-200 rounded-lg shadow-md bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            {{ __('Tambah Pengeluaran Baru') }}
+                        </a>
+
+
                     </div>
 
                     <!-- Form Filter -->
