@@ -20,16 +20,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         $initialBalance = $user->initial_balance;
 
+        // Total pengeluaran bulan ini
         $totalExpensesThisMonth = $user->expenses()
                                         ->whereMonth('expense_date', now()->month)
                                         ->whereYear('expense_date', now()->year)
                                         ->sum('amount');
 
+        // Total pengeluaran tahun ini
         $totalExpensesThisYear = $user->expenses()
                                        ->whereYear('expense_date', now()->year)
                                        ->sum('amount');
 
+        // Sisa saldo bulan ini (saldo awal - pengeluaran bulan ini)
         $remainingBalance = $initialBalance - $totalExpensesThisMonth;
+
+        // NEW: Total pengeluaran keseluruhan (semua waktu)
+        $totalExpensesAllTime = $user->expenses()->sum('amount');
+
+        // NEW: Sisa saldo keseluruhan (saldo awal - pengeluaran keseluruhan)
+        $remainingBalanceAllTime = $initialBalance - $totalExpensesAllTime;
+
 
         // Ambil semua kategori pengguna dan hitung pengeluaran bulan ini untuk setiap kategori
         $categoriesWithBudgets = $user->categories()->get()->map(function ($category) {
@@ -38,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                                          ->whereYear('expense_date', now()->year)
                                          ->sum('amount');
             $category->current_month_spend = $currentMonthSpend;
+            $category->max_budget = $category->max_budget ?? 0; // Pastikan max_budget tidak null
             $category->remaining_budget = $category->max_budget - $currentMonthSpend;
             $category->percentage_used = ($category->max_budget > 0) ? round(($currentMonthSpend / $category->max_budget) * 100, 2) : 0;
             return $category;
@@ -72,9 +83,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'totalExpensesThisMonth',
             'totalExpensesThisYear',
             'remainingBalance',
-            'expensesByCategory', // Tetap pertahankan jika ada komponen lain yang menggunakannya
-            'categoryPercentages', // Tetap pertahankan jika ada komponen lain yang menggunakannya
-            'categoriesWithBudgets' // VARIABEL BARU: Digunakan untuk bagian detail budget kategori
+            'totalExpensesAllTime', // NEW: Pass total expenses for all time
+            'remainingBalanceAllTime', // NEW: Pass remaining balance for all time
+            'expensesByCategory',
+            'categoryPercentages',
+            'categoriesWithBudgets'
         ));
     })->name('dashboard');
 

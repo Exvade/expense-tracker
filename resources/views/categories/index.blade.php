@@ -16,7 +16,6 @@
         <div class="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="overflow-hidden bg-white border border-gray-100 shadow-xl sm:rounded-xl">
                 <div class="p-4 text-gray-900 sm:p-6">
-                    <!-- Pesan sukses atau error -->
                     @if (session('success'))
                         <div class="relative px-4 py-3 mb-6 text-green-800 border border-green-200 rounded-lg shadow-sm bg-green-50"
                             role="alert">
@@ -50,7 +49,6 @@
                         </div>
                     @endif
 
-                    <!-- Header Section -->
                     <div
                         class="flex flex-col items-start justify-between mb-6 space-y-3 sm:flex-row sm:items-center sm:space-y-0">
                         <div class="flex items-center">
@@ -140,7 +138,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                     </svg>
-                                                    {{ __('Pengeluaran Bulan Ini') }}
+                                                    {{ __('Total Pengeluaran') }} {{-- Diubah --}}
                                                 </div>
                                             </th>
                                             <th scope="col"
@@ -152,7 +150,7 @@
                                                             stroke-width="2"
                                                             d="M14 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
-                                                    {{ __('Sisa Budget') }}
+                                                    {{ __('Sisa Budget (Keseluruhan)') }} {{-- Diubah --}}
                                                 </div>
                                             </th>
                                             <th scope="col"
@@ -195,10 +193,19 @@
                                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                                                     {{ 'Rp ' . number_format($category->max_budget, 2, ',', '.') }}
                                                 </td>
+                                                {{-- PERUBAHAN UTAMA DI SINI --}}
                                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                                    {{ 'Rp ' . number_format($category->current_month_spend, 2, ',', '.') }}
+                                                    {{ 'Rp ' . number_format($category->total_spend, 2, ',', '.') }}
                                                     @php
-                                                        $percentage = $category->percentage_used;
+                                                        $percentage =
+                                                            $category->max_budget > 0
+                                                                ? round(
+                                                                    ($category->total_spend / $category->max_budget) *
+                                                                        100,
+                                                                )
+                                                                : ($category->total_spend > 0
+                                                                    ? 100
+                                                                    : 0);
                                                         $statusClass = 'text-green-600';
                                                         $statusBarClass = 'bg-green-500';
                                                         if ($percentage >= 100) {
@@ -224,22 +231,23 @@
                                                 </td>
                                                 <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                                                     @php
+                                                        $remainingBudgetAllTime =
+                                                            $category->max_budget - $category->total_spend;
                                                         $remainingClass = 'text-gray-900';
-                                                        if ($category->remaining_budget < 0) {
+                                                        if ($remainingBudgetAllTime < 0) {
                                                             $remainingClass = 'text-red-600 font-bold';
                                                         } elseif (
-                                                            $category->remaining_budget <
-                                                                $category->max_budget * 0.25 &&
+                                                            $remainingBudgetAllTime < $category->max_budget * 0.25 &&
                                                             $category->max_budget > 0
                                                         ) {
-                                                            // Less than 25% remaining
                                                             $remainingClass = 'text-orange-600 font-bold';
                                                         }
                                                     @endphp
                                                     <span class="{{ $remainingClass }}">
-                                                        {{ 'Rp ' . number_format($category->remaining_budget, 2, ',', '.') }}
+                                                        {{ 'Rp ' . number_format($remainingBudgetAllTime, 2, ',', '.') }}
                                                     </span>
                                                 </td>
+                                                {{-- AKHIR PERUBAHAN UTAMA --}}
                                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                                     <div class="flex items-center space-x-3">
                                                         <a href="{{ route('categories.edit', $category->id) }}"
@@ -280,7 +288,6 @@
                             </div>
                         </div>
 
-                        <!-- Stats Card (already exists, no changes needed for this section but keeping it for context) -->
                         <div
                             class="p-4 mt-6 border border-purple-200 shadow-sm bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
                             <div class="flex items-center">
@@ -292,7 +299,7 @@
                                 </svg>
                                 <div>
                                     <h4 class="text-sm font-semibold text-purple-800">Total Kategori</h4>
-                                    <p class="text-lg font-bold text-purple-900">{{ $categories->count() }} kategori
+                                    <p class="font-bold text-purple-900 lg">{{ $categories->count() }} kategori
                                     </p>
                                 </div>
                             </div>
